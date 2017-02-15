@@ -6,6 +6,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import executor.ExecutorTest;
 import kishore.computation.WorkQueuePrimeCalculation;
 import reactor.core.Disposable;
 import reactor.core.publisher.WorkQueueProcessor;
@@ -18,6 +22,8 @@ import reactor.core.publisher.WorkQueueProcessor;
  *
  */
 public class WorkQueueProcessorDynamicSubscribers {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(ExecutorTest.class);
 	
 	private List<Disposable> disposableList = new ArrayList<>();
 	private int size = disposableList.size();
@@ -38,7 +44,9 @@ public class WorkQueueProcessorDynamicSubscribers {
 		final ExecutorService service = Executors.newFixedThreadPool(poolSize);
 		final WorkQueueProcessor<WorkQueuePrimeCalculation> processor = WorkQueueProcessor.create(service);
 		int batch = 10;
-		while(true){
+		long index = 0;
+		LOGGER.info("Start Time - "+System.currentTimeMillis());
+		while(index < 10){
 			while(batch <= 200){
 				e4.updateSubscribers(processor, batch, poolSize, processor.downstreamCount());
 				System.out.println("N - Subscribers - "+processor.downstreamCount());
@@ -50,8 +58,11 @@ public class WorkQueueProcessorDynamicSubscribers {
 			}
 			System.out.println("Resetting Batch, Cooling Down !!!");
 			batch = 0;
+			index += 1;
 			Thread.sleep(10000);
 		}
+		processor.onComplete();
+		LOGGER.info("Stop Time - "+System.currentTimeMillis());
 	}
 	
 	private void updateSubscribers(final WorkQueueProcessor<WorkQueuePrimeCalculation> processor, final int batch, final int poolSize, final long nSubscribers) throws Exception{
