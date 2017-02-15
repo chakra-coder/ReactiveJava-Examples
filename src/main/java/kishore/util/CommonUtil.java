@@ -10,7 +10,7 @@ public class CommonUtil {
 	public static void runPrime(final long longMax) {
 		long primeCount, primeMax = 0;
 		int index = 0;
-		while (index < 30000) {
+		while (index < 50000) {
 			long count = 0;
 			long max = 0;
 			for (long i = 3; i <= longMax; i++) {

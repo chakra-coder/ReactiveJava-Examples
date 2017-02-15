@@ -29,8 +29,8 @@ public class ExecutorTest {
 		int batch = 10;
 		long index = 0;
 		System.out.println("Start Time - "+System.currentTimeMillis());
-		while (index < 10) {
-			while (batch <= 20) {
+		while (index < 100) {
+			while (batch <= 50) {
 				batch += 10;
 				for (int i = 1; i <= batch; i++) {
 					service.submit(new ThreadPrimeCalculation(batch));

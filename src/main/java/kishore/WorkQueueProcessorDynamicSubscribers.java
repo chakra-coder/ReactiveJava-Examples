@@ -57,8 +57,8 @@ public class WorkQueueProcessorDynamicSubscribers {
 		int batch = 10;
 		long index = 0;
 		System.out.println("Start Time - "+System.currentTimeMillis());
-		while(index < 10){
-			while(batch <= 20){
+		while(index < 100){
+			while(batch <= 50){
 				e4.updateSubscribers(processor, batch, poolSize, processor.downstreamCount());
 				System.out.println("N - Subscribers - "+processor.downstreamCount());
 				batch += 10;
