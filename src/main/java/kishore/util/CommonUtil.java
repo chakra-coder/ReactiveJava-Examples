@@ -1,18 +1,16 @@
-package kishore.computation;
+package kishore.util;
 
-public final class PrimeCalculator {
-	private final long longMax;
-	private final long batch;
+import org.slf4j.*;
 
-	public PrimeCalculator(long max, long batch) {
-		longMax = max;
-		this.batch = batch;
-	}
-
-	public void run() {
+public class CommonUtil {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(CommonUtil.class);
+	private static volatile long count;
+	
+	public static void runPrime(final long longMax) {
 		long primeCount, primeMax = 0;
 		int index = 0;
-		while (index < 1000000) {
+		while (index < 750000) {
 			long count = 0;
 			long max = 0;
 			for (long i = 3; i <= longMax; i++) {
@@ -30,5 +28,9 @@ public final class PrimeCalculator {
 			primeMax = max;
 			//System.out.println("Prime Count - " + primeCount + ", Max - " + primeMax);
 		}
+		count += 1;
+		System.out.println("Count - "+count);
+		LOGGER.info("Count - "+count);
 	}
+
 }

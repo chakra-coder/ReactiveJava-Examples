@@ -6,38 +6,45 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-import kishore.computation.PrimeCalculator;
+import kishore.computation.WorkQueuePrimeCalculation;
 import reactor.core.Disposable;
 import reactor.core.publisher.WorkQueueProcessor;
 
-public class Example4 {
+/**
+ * 
+ * @author kkishore
+ * 
+ * Dynamically Add/Remove subscribers
+ *
+ */
+public class WorkQueueProcessorDynamicSubscribers {
 	
 	private List<Disposable> disposableList = new ArrayList<>();
 	private int size = disposableList.size();
-	private int previousBatchSize = 0;
+	private final int weight_value = 2;
 	
-	private static final Consumer<PrimeCalculator> primeConsumer = new Consumer<PrimeCalculator>() {
+	private static final Consumer<WorkQueuePrimeCalculation> primeConsumer = new Consumer<WorkQueuePrimeCalculation>() {
 
 		@Override
-		public void accept(PrimeCalculator t) {
+		public void accept(WorkQueuePrimeCalculation t) {
 			t.run();
 		}
 		
 	};
 	
 	public static void main(String[] args) throws Exception {
-		Example4 e4 = new Example4();
-		final int poolSize = 25;
+		WorkQueueProcessorDynamicSubscribers e4 = new WorkQueueProcessorDynamicSubscribers();
+		final int poolSize = 100;
 		final ExecutorService service = Executors.newFixedThreadPool(poolSize);
-		final WorkQueueProcessor<PrimeCalculator> processor = WorkQueueProcessor.create(service);
+		final WorkQueueProcessor<WorkQueuePrimeCalculation> processor = WorkQueueProcessor.create(service);
 		int batch = 10;
 		while(true){
-			while(batch <= 100){
+			while(batch <= 200){
 				e4.updateSubscribers(processor, batch, poolSize, processor.downstreamCount());
 				System.out.println("N - Subscribers - "+processor.downstreamCount());
 				batch += 10;
-				for(int i = 10; i < 50; i++){
-					processor.onNext(new PrimeCalculator(i, batch));
+				for(int i = 1; i <= batch; i++){
+					processor.onNext(new WorkQueuePrimeCalculation(i));
 				}
 				Thread.sleep(1000);
 			}
@@ -47,21 +54,19 @@ public class Example4 {
 		}
 	}
 	
-	private void updateSubscribers(final WorkQueueProcessor<PrimeCalculator> processor, final int batch, final int poolSize, final long nSubscribers) throws Exception{
+	private void updateSubscribers(final WorkQueueProcessor<WorkQueuePrimeCalculation> processor, final int batch, final int poolSize, final long nSubscribers) throws Exception{
 		System.out.println("\n\n");
 		System.out.println("N - Subscribers - "+nSubscribers);
 		if(nSubscribers == 0){
 			int threshold = (poolSize / batch) + 1;
 			addSubscribers(processor, threshold);
-			this.previousBatchSize = batch;
 		}else{
-			if(nSubscribers >= poolSize || batch < nSubscribers){
+			if(nSubscribers >= poolSize || nSubscribers >= (poolSize/2)){
 				System.out.println("Deleting PoolSize");
-				int remove = Math.abs((int)nSubscribers - batch);
-				remove = remove + remove;
+				int remove = Math.abs((int)nSubscribers - poolSize);
 				if(remove > this.size){
 					System.out.println("Setting Remove Size as Size - "+this.size);
-					remove = this.size;
+					remove = remove - this.size;
 				}
 				final List<Disposable> subscriberList = disposableList.subList(0, remove-1);
 				for(final Disposable disposable : disposableList){
@@ -72,17 +77,21 @@ public class Example4 {
 				System.out.println("Giving Think Time to process tasks in Unsubscribed Processors");
 				Thread.sleep(1000);
 			}else{
-				if(batch > previousBatchSize){
+				if(nSubscribers < (batch/weight_value)){
+					System.out.println("Batch is Higer !!!");
 					int threshold = batch / 10;
-					threshold = threshold < 0 ? 1 : threshold;
-					addSubscribers(processor, (int)(threshold - nSubscribers));
+					if(threshold > poolSize){
+						threshold = 0;
+					}else{
+						threshold = threshold <= 0 ? 1 : threshold;
+					}
+					addSubscribers(processor, threshold);
 				}
-				this.previousBatchSize = batch;
 			}
 		}
 	}
 	
-	private void addSubscribers(final WorkQueueProcessor<PrimeCalculator> processor, int threshold){
+	private void addSubscribers(final WorkQueueProcessor<WorkQueuePrimeCalculation> processor, int threshold){
 		threshold = threshold > 0 ? threshold : 1;
 		for(int i = 1; i <= threshold; i++){
 			Disposable subscribe = processor.subscribe(primeConsumer);
