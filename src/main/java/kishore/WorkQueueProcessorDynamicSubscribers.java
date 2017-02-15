@@ -1,5 +1,7 @@
 package kishore;
 
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -23,6 +25,15 @@ import reactor.core.publisher.WorkQueueProcessor;
  */
 public class WorkQueueProcessorDynamicSubscribers {
 	
+	static{
+		try {
+			System.setOut(new PrintStream("WorkQueue.log"));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	private static final Logger LOGGER = LoggerFactory.getLogger(ExecutorTest.class);
 	
 	private List<Disposable> disposableList = new ArrayList<>();
@@ -45,9 +56,9 @@ public class WorkQueueProcessorDynamicSubscribers {
 		final WorkQueueProcessor<WorkQueuePrimeCalculation> processor = WorkQueueProcessor.create(service);
 		int batch = 10;
 		long index = 0;
-		LOGGER.info("Start Time - "+System.currentTimeMillis());
+		System.out.println("Start Time - "+System.currentTimeMillis());
 		while(index < 10){
-			while(batch <= 200){
+			while(batch <= 20){
 				e4.updateSubscribers(processor, batch, poolSize, processor.downstreamCount());
 				System.out.println("N - Subscribers - "+processor.downstreamCount());
 				batch += 10;
@@ -62,7 +73,7 @@ public class WorkQueueProcessorDynamicSubscribers {
 			Thread.sleep(10000);
 		}
 		processor.onComplete();
-		LOGGER.info("Stop Time - "+System.currentTimeMillis());
+		System.out.println("Stop Time - "+System.currentTimeMillis());
 	}
 	
 	private void updateSubscribers(final WorkQueueProcessor<WorkQueuePrimeCalculation> processor, final int batch, final int poolSize, final long nSubscribers) throws Exception{
