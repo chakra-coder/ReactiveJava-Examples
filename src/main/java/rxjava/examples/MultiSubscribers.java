@@ -15,7 +15,7 @@ public class MultiSubscribers {
 
         final ExecutorService executorService = Executors.newFixedThreadPool(10);
 
-        final Observable<Object> observable = Observable.create(subscriber -> {
+        final Observable<Integer> observable = Observable.create(subscriber -> {
             System.out.println("Create");
             subscriber.onNext(20);
             subscriber.onNext(30);
@@ -32,16 +32,29 @@ public class MultiSubscribers {
 
         System.out.println("Thread Example");
 
-        final Observable<Object> concurrent = observable.subscribeOn(Schedulers.from(executorService));
-
-        concurrent.subscribe(x -> {
+        observable.observeOn(Schedulers.from(executorService)).map(x -> {
+            System.out.println("Thead Map - " + Thread.currentThread().getId());
+            return x * x;
+        }).subscribeOn(Schedulers.from(executorService)).subscribe(x -> {
             System.out.println(x);
-            System.out.println("Thread - "+Thread.currentThread().getId());
+            System.out.println("Thread - " + Thread.currentThread().getId());
+        });
+
+        /*final Observable<Integer> concurrent = observable.subscribeOn(Schedulers.from(executorService));
+
+        concurrent.observeOn(Schedulers.from(executorService)).map(x -> {
+            System.out.println("Thead Map - "+Thread.currentThread().getId());
+            return x * x;
         });
 
         concurrent.subscribe(x -> {
             System.out.println(x);
             System.out.println("Thread - "+Thread.currentThread().getId());
         });
+
+        concurrent.subscribe(x -> {
+            System.out.println(x);
+            System.out.println("Thread - "+Thread.currentThread().getId());
+        });*/
     }
 }
